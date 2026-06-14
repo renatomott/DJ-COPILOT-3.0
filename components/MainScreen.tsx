@@ -32,7 +32,7 @@ import { LibraryFilters, FilterState } from './LibraryFilters';
 import { Header } from './Header';
 import { identifyTrackFromImage } from '../services/geminiService';
 import { fileToBase64 } from '../utils/fileUtils';
-import { detectClash } from '../utils/harmonicUtils';
+import { detectClash, normalizeToCamelot } from '../utils/harmonicUtils';
 import { MashupFinder } from './MashupFinder';
 import { CamelotWheel } from './CamelotWheel';
 import { getGenreTheme } from '../utils/themeUtils';
@@ -163,6 +163,12 @@ export const MainScreen: React.FC<MainScreenProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'deck' | 'library' | 'mashup' | 'builder' | 'setup'>('library');
   const [showWheelModal, setShowWheelModal] = useState(false);
+  const [showWheelDesktop, setShowWheelDesktop] = useState(false);
+
+  const handleNowPlayingExpand = (expanded: boolean) => {
+    if (!expanded) setShowWheelDesktop(true);
+    else setShowWheelDesktop(false);
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>({ minBpm: '', maxBpm: '', keys: [], genres: [] });
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
@@ -516,9 +522,20 @@ export const MainScreen: React.FC<MainScreenProps> = ({
             {currentTrack ? (
               <div className="md:grid md:grid-cols-12 md:gap-6 md:h-full md:px-6 md:pb-6 relative flex flex-col h-full px-4 pb-24">
                 
-                {/* 1. Left Column: On Air Card (FIXED HEIGHT ON DESKTOP) */}
-                <div className="md:col-span-5 lg:col-span-5 md:h-full md:overflow-hidden flex-shrink-0 mb-4 md:mb-0">
-                    <NowPlaying track={currentTrack} language={language} className="h-full" />
+                {/* 1. Left Column: On Air Card + Camelot Wheel (desktop) */}
+                <div className="md:col-span-5 lg:col-span-5 md:h-full md:overflow-y-auto md:overflow-hidden flex-shrink-0 mb-4 md:mb-0 flex flex-col gap-3">
+                    <NowPlaying track={currentTrack} language={language} className="flex-shrink-0" onExpandChange={handleNowPlayingExpand} />
+                    <div className="hidden md:block bg-slate-900/60 border border-slate-800 rounded-2xl flex-shrink-0 overflow-hidden">
+                        <button onClick={() => setShowWheelDesktop(p => !p)} className="w-full px-4 py-3 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-cyan-400 transition-colors">
+                            <span>Camelot Wheel {currentTrack?.key ? `· ${normalizeToCamelot(currentTrack.key)}` : ''}</span>
+                            <span className={`transition-transform duration-200 ${showWheelDesktop ? 'rotate-180' : ''}`}>▾</span>
+                        </button>
+                        {showWheelDesktop && (
+                            <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-200">
+                                <CamelotWheel activeKey={currentTrack?.key} />
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* 2. Right Column: Suggestions (SCROLLABLE ON DESKTOP) */}
@@ -526,7 +543,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
                     {/* Camelot Wheel button — mobile only */}
                     {currentTrack && (
                         <button onClick={() => setShowWheelModal(true)} className="md:hidden w-full py-2 mb-2 bg-slate-900/80 border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-cyan-400 flex items-center justify-center gap-2">
-                            🎡 Camelot Wheel · {currentTrack.key}
+                            Camelot Wheel · {currentTrack.key}
                         </button>
                     )}
                     <SuggestionPanel currentTrack={currentTrack} playlist={playlist.filter(t => enabledDirectories.includes(t.location))} suggestions={suggestions} setSuggestions={setSuggestions} onSelectTrack={handleSelectTrack} onAddToQueue={(t) => handleAddToQueue(undefined, t)} onUpdateCurrentTrack={setCurrentTrack} language={language} />
@@ -596,12 +613,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
         {/* TAB: MASHUPS (Renovated Layout) */}
         {activeTab === 'mashup' && (
             <div className="flex-1 h-full md:overflow-hidden md:overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4 p-2 md:p-0">
-                {/* Camelot Wheel — desktop only inline, mobile via modal */}
-                <div className="hidden md:block bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Camelot Wheel</p>
-                    <CamelotWheel activeKey={currentTrack?.key} />
-                </div>
-                <MashupFinder playlist={playlist} onSelectTrack={handleSelectTrack} onAddToQueue={(t) => handleAddToQueue(undefined, t)} onUpdateCurrentTrack={setCurrentTrack} language={language} />
+<MashupFinder playlist={playlist} onSelectTrack={handleSelectTrack} onAddToQueue={(t) => handleAddToQueue(undefined, t)} onUpdateCurrentTrack={setCurrentTrack} language={language} />
             </div>
         )}
 

@@ -35,9 +35,10 @@ interface NowPlayingProps {
   track: Track;
   language: 'pt-BR' | 'en-US';
   className?: string;
+  onExpandChange?: (expanded: boolean) => void;
 }
 
-export const NowPlaying: React.FC<NowPlayingProps> = ({ track, language, className = "" }) => {
+export const NowPlaying: React.FC<NowPlayingProps> = ({ track, language, className = "", onExpandChange }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSpinning, setIsSpinning] = useState(true);
 
@@ -66,7 +67,7 @@ export const NowPlaying: React.FC<NowPlayingProps> = ({ track, language, classNa
   return (
     <>
       <div 
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => { const next = !isExpanded; setIsExpanded(next); onExpandChange?.(next); }}
         className={`rounded-3xl relative transition-all duration-500 group cursor-pointer border overflow-hidden flex flex-col ${className}`}
         style={glowStyle}
       >
@@ -152,7 +153,7 @@ export const NowPlaying: React.FC<NowPlayingProps> = ({ track, language, classNa
                     <div className="flex flex-col items-center w-full flex-shrink-0">
                         {/* Large Vinyl - Responsive Size for Landscape Tablets */}
                         <div 
-                            className="relative w-32 h-32 sm:w-40 sm:h-40 max-h-[25vh] aspect-square mb-2 mt-2 cursor-pointer active:scale-95 transition-transform"
+                            className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-28 md:h-28 max-h-[22vh] aspect-square mb-2 mt-2 cursor-pointer active:scale-95 transition-transform"
                             onClick={toggleSpin}
                         >
                             <div 
