@@ -2,6 +2,20 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Track, Suggestion, MashupPair, SetReport, SuggestionResult } from "../types";
 
+const STORAGE_KEY_API = 'dj_copilot_gemini_key';
+
+export const getApiKey = (): string => {
+  return localStorage.getItem(STORAGE_KEY_API) || process.env.API_KEY || '';
+};
+
+export const setApiKey = (key: string): void => {
+  localStorage.setItem(STORAGE_KEY_API, key.trim());
+};
+
+export const hasApiKey = (): boolean => {
+  return Boolean(getApiKey());
+};
+
 const textModel = "gemini-3-flash-preview";
 const imageModel = "gemini-2.5-flash-image";
 
@@ -34,7 +48,7 @@ const handleApiError = (err: any, context: string) => {
 
 export const generateVisuals = async (track: Track): Promise<string | null> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const prompt = `Crie uma arte abstrata, minimalista e psicodélica que represente a música ${track.name} (${track.genre}) com BPM ${track.bpm}. Sem texto.`;
     
     const response = await retryWithBackoff(async () => {
@@ -70,7 +84,7 @@ export const planAutoSet = async (
     language: 'pt-BR' | 'en-US' = 'pt-BR'
 ): Promise<Track[]> => {
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: getApiKey() });
         
         let pool = playlist;
 
@@ -173,7 +187,7 @@ export const planAutoSet = async (
 
 export const getSetReport = async (history: Track[]): Promise<SetReport> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const tracksText = history.map(t => `${t.name} - ${t.artist} (${t.bpm} BPM, ${t.key})`).join('\n');
     const prompt = `Analise este set de DJ e retorne um JSON com summary, highlights (array) e vibeProgression:\n${tracksText}`;
     
@@ -203,7 +217,7 @@ export const getSetReport = async (history: Track[]): Promise<SetReport> => {
 
 export const getSemanticSearch = async (query: string, playlist: Track[]): Promise<Track[]> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const trackData = playlist.slice(0, 100).map(t => `ID:${t.id}|${t.name}|${t.genre}`).join('\n');
     const prompt = `Dada a busca "${query}", retorne um JSON com os IDs das 8 faixas mais compatíveis: { "ids": ["..."] }\n\n${trackData}`;
     
@@ -233,7 +247,7 @@ export const getSemanticSearch = async (query: string, playlist: Track[]): Promi
 
 export const getMashupPairs = async (playlist: Track[]): Promise<MashupPair[]> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const sample = playlist.slice(0, 50).map(t => `ID:${t.id}|${t.name}|${t.key}|${t.bpm}`).join('\n');
     const prompt = `Identifique 4 pares de faixas para mashup. Retorne JSON com array "pairs" contendo id1, id2 e reason.\n\n${sample}`;
     
@@ -292,7 +306,7 @@ export const getTrackSuggestions = async (currentTrack: Track, playlist: Track[]
   });
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
     // Envia as 120 faixas mais próximas para a IA
     const tracksToSend = sortedCandidates.slice(0, 120);
@@ -389,7 +403,7 @@ export const getTrackSuggestions = async (currentTrack: Track, playlist: Track[]
 
 export const getGapAnalysis = async (playlist: Track[]): Promise<string[]> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const stats = playlist.slice(0, 200).map(t => `${t.bpm}|${t.genre}`).join(',');
     const prompt = `Analise as lacunas nesta coleção de músicas: ${stats}. Retorne 5 pontos técnicos sobre o que falta na biblioteca.`;
     
@@ -404,7 +418,7 @@ export const getGapAnalysis = async (playlist: Track[]): Promise<string[]> => {
 
 export const identifyTrackFromImage = async (base64Image: string): Promise<{ title: string; artist: string }> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const imagePart = { inlineData: { data: base64Image, mimeType: 'image/jpeg' } };
     
     const response = await retryWithBackoff(async () => {
@@ -436,7 +450,7 @@ export const identifyTrackFromImage = async (base64Image: string): Promise<{ tit
 
 export const generatePlaylist = async (playlist: Track[], vibe: string, isVocal: string): Promise<Track[]> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const tracksText = playlist.slice(0, 100).map(t => `ID:${t.id}|${t.name}|${t.genre}`).join('\n');
     const prompt = `Crie uma playlist de 10 faixas para vibe "${vibe}" (vocal: ${isVocal}). Retorne JSON com array "ids".\n\n${tracksText}`;
     
@@ -466,7 +480,7 @@ export const generatePlaylist = async (playlist: Track[], vibe: string, isVocal:
 
 export const enrichPlaylistData = async (playlist: Track[]): Promise<Partial<Track>[]> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     // IMPROVED: Include BPM and Genre for better AI Context
     const tracksText = playlist.slice(0, 50).map(t => 
         `ID:${t.id}|${t.name}|${t.artist}|${t.bpm} BPM|${t.genre}`
