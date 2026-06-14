@@ -15,12 +15,13 @@ interface SuggestionPanelProps {
   setSuggestions: React.Dispatch<React.SetStateAction<Suggestion[]>>;
   onSelectTrack: (track: Track) => void;
   onAddToQueue?: (track: Track) => void;
+  onUpdateCurrentTrack?: (track: Track) => void;
   language: 'pt-BR' | 'en-US';
 }
 
 const LAST_ID_KEY = 'dj_copilot_last_suggestion_id';
 
-export const SuggestionPanel: React.FC<SuggestionPanelProps> = ({ currentTrack, playlist, suggestions, setSuggestions, onSelectTrack, onAddToQueue, language }) => {
+export const SuggestionPanel: React.FC<SuggestionPanelProps> = ({ currentTrack, playlist, suggestions, setSuggestions, onSelectTrack, onAddToQueue, onUpdateCurrentTrack, language }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +76,7 @@ export const SuggestionPanel: React.FC<SuggestionPanelProps> = ({ currentTrack, 
       
       // Injeta pontos de cue sugeridos pela IA no objeto da faixa atual
       if (cuePoints && cuePoints.length > 0) {
-          currentTrack.cuePoints = cuePoints;
+          onUpdateCurrentTrack?.({ ...currentTrack, cuePoints });
       }
     } catch (err) {
       console.error(err);

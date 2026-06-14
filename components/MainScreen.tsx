@@ -521,7 +521,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
 
                 {/* 2. Right Column: Suggestions (SCROLLABLE ON DESKTOP) */}
                 <div className="md:col-span-7 lg:col-span-7 md:h-full md:overflow-y-auto custom-scrollbar md:pr-2">
-                    <SuggestionPanel currentTrack={currentTrack} playlist={playlist.filter(t => enabledDirectories.includes(t.location))} suggestions={suggestions} setSuggestions={setSuggestions} onSelectTrack={handleSelectTrack} onAddToQueue={(t) => handleAddToQueue(undefined, t)} language={language} />
+                    <SuggestionPanel currentTrack={currentTrack} playlist={playlist.filter(t => enabledDirectories.includes(t.location))} suggestions={suggestions} setSuggestions={setSuggestions} onSelectTrack={handleSelectTrack} onAddToQueue={(t) => handleAddToQueue(undefined, t)} onUpdateCurrentTrack={setCurrentTrack} language={language} />
                 </div>
               </div>
             ) : (
@@ -588,7 +588,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
         {/* TAB: MASHUPS (Renovated Layout) */}
         {activeTab === 'mashup' && (
             <div className="flex-1 h-full md:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <MashupFinder playlist={playlist} onSelectTrack={handleSelectTrack} onAddToQueue={(t) => handleAddToQueue(undefined, t)} language={language} />
+                <MashupFinder playlist={playlist} onSelectTrack={handleSelectTrack} onAddToQueue={(t) => handleAddToQueue(undefined, t)} onUpdateCurrentTrack={setCurrentTrack} language={language} />
             </div>
         )}
 
