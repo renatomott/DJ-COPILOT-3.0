@@ -34,6 +34,7 @@ import { identifyTrackFromImage } from '../services/geminiService';
 import { fileToBase64 } from '../utils/fileUtils';
 import { detectClash } from '../utils/harmonicUtils';
 import { MashupFinder } from './MashupFinder';
+import { CamelotWheel } from './CamelotWheel';
 import { getGenreTheme } from '../utils/themeUtils';
 import { TransitionToast } from './TransitionToast';
 import { SwipeableItem } from './SwipeableItem';
@@ -161,6 +162,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   onGroupingModeChange
 }) => {
   const [activeTab, setActiveTab] = useState<'deck' | 'library' | 'mashup' | 'builder' | 'setup'>('library');
+  const [showWheelModal, setShowWheelModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>({ minBpm: '', maxBpm: '', keys: [], genres: [] });
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
@@ -521,6 +523,12 @@ export const MainScreen: React.FC<MainScreenProps> = ({
 
                 {/* 2. Right Column: Suggestions (SCROLLABLE ON DESKTOP) */}
                 <div className="md:col-span-7 lg:col-span-7 md:h-full md:overflow-y-auto custom-scrollbar md:pr-2">
+                    {/* Camelot Wheel button — mobile only */}
+                    {currentTrack && (
+                        <button onClick={() => setShowWheelModal(true)} className="md:hidden w-full py-2 mb-2 bg-slate-900/80 border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-cyan-400 flex items-center justify-center gap-2">
+                            🎡 Camelot Wheel · {currentTrack.key}
+                        </button>
+                    )}
                     <SuggestionPanel currentTrack={currentTrack} playlist={playlist.filter(t => enabledDirectories.includes(t.location))} suggestions={suggestions} setSuggestions={setSuggestions} onSelectTrack={handleSelectTrack} onAddToQueue={(t) => handleAddToQueue(undefined, t)} onUpdateCurrentTrack={setCurrentTrack} language={language} />
                 </div>
               </div>
@@ -587,8 +595,26 @@ export const MainScreen: React.FC<MainScreenProps> = ({
         
         {/* TAB: MASHUPS (Renovated Layout) */}
         {activeTab === 'mashup' && (
-            <div className="flex-1 h-full md:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex-1 h-full md:overflow-hidden md:overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4 p-2 md:p-0">
+                {/* Camelot Wheel — desktop only inline, mobile via modal */}
+                <div className="hidden md:block bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Camelot Wheel</p>
+                    <CamelotWheel activeKey={currentTrack?.key} />
+                </div>
                 <MashupFinder playlist={playlist} onSelectTrack={handleSelectTrack} onAddToQueue={(t) => handleAddToQueue(undefined, t)} onUpdateCurrentTrack={setCurrentTrack} language={language} />
+            </div>
+        )}
+
+        {/* Camelot Wheel Modal — mobile only */}
+        {showWheelModal && (
+            <div className="fixed inset-0 z-[150] flex flex-col bg-black/95 backdrop-blur-xl md:hidden">
+                <div className="flex items-center justify-between p-4 border-b border-slate-800">
+                    <span className="text-sm font-black text-white uppercase tracking-widest">Camelot Wheel</span>
+                    <button onClick={() => setShowWheelModal(false)} className="p-2 rounded-xl bg-slate-800 text-slate-300">✕</button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                    <CamelotWheel activeKey={currentTrack?.key} />
+                </div>
             </div>
         )}
 
