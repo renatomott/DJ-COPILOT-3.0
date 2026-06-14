@@ -178,6 +178,22 @@ export const SetBuilder: React.FC<SetBuilderProps> = ({ queue, setQueue, onSelec
       doc.save(getSuggestedFileName('pdf'));
   };
 
+
+  const exportM3U = () => {
+      if (queue.length === 0) return;
+      let m3u = '#EXTM3U\n';
+      queue.forEach(t => {
+          const seconds = (() => {
+              const parts = t.duration.split(':');
+              if (parts.length === 2) return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+              return -1;
+          })();
+          m3u += `#EXTINF:${seconds},${t.artist} - ${t.name}\n`;
+          m3u += `${t.name}\n`;
+      });
+      downloadFile(m3u, getSuggestedFileName('m3u'), 'audio/x-mpegurl');
+  };
+
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -387,6 +403,10 @@ export const SetBuilder: React.FC<SetBuilderProps> = ({ queue, setQueue, onSelec
                         </button>
                         {queue.length > 0 ? (
                             <>
+                                <button onClick={exportM3U} className="px-3 py-2 bg-slate-900 border border-green-800/50 rounded-lg text-green-400 font-bold text-xs flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg min-h-[36px]" title="Exportar M3U (Rekordbox/VirtualDJ/Traktor)">
+                                    <DownloadIcon className="w-4 h-4" />
+                                    M3U
+                                </button>
                                 <button onClick={exportBoth} className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white font-bold text-xs flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg min-h-[36px]">
                                     <DownloadIcon className="w-4 h-4" />
                                 </button>
