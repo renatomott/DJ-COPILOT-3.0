@@ -46,6 +46,7 @@ interface MainScreenProps {
   onEnrich: () => void;
   onUpdateLibrary: (file: File) => void;
   isEnriching: boolean;
+  enrichProgress?: { done: number; total: number } | null;
   fontScale: number;
   onFontScaleChange: (scale: number) => void;
   currentTrack: Track | null;
@@ -137,6 +138,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   onEnrich,
   onUpdateLibrary,
   isEnriching,
+  enrichProgress,
   fontScale,
   onFontScaleChange,
   currentTrack,
@@ -553,6 +555,20 @@ export const MainScreen: React.FC<MainScreenProps> = ({
                     {currentTrack && (<div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2">{filterPills.map((pill, idx) => (<button key={idx} onClick={pill.action} className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap transition-all shadow-sm flex-shrink-0 ${pill.active ? 'bg-cyan-600 text-white border-cyan-400' : 'bg-slate-900/80 text-slate-400 border-slate-700 hover:border-cyan-500 hover:text-white'}`}>{pill.label}</button>))}</div>)}
                     <LibraryFilters availableKeys={availableKeys} availableGenres={availableGenres} onFilterChange={setFilters} initialFilters={filters} />
                     <button onClick={onEnrich} disabled={isEnriching} className="w-full py-2 text-[10px] font-bold text-cyan-500 bg-cyan-900/20 border border-cyan-500/30 rounded-lg flex items-center justify-center gap-2 hover:bg-cyan-900/40 transition-colors disabled:opacity-50"><RefreshCwIcon className={`w-3 h-3 ${isEnriching ? 'animate-spin' : ''}`} /> {isEnriching ? t.analyzing : t.enrichBtn.toUpperCase()}</button>
+                    {isEnriching && enrichProgress && (
+                      <div className="mt-2 w-full">
+                        <div className="flex justify-between text-[9px] text-slate-400 mb-1">
+                          <span>Enriquecendo...</span>
+                          <span>{enrichProgress.done}/{enrichProgress.total}</span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-1.5">
+                          <div
+                            className="bg-cyan-500 h-1.5 rounded-full transition-all duration-500"
+                            style={{ width: `${(enrichProgress.done / enrichProgress.total) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                 </div>
                 <div className="hidden md:flex flex-col flex-1 overflow-y-auto custom-scrollbar p-2">
                     <div className="space-y-1">

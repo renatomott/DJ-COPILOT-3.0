@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { FileUploadScreen } from './components/FileUploadScreen';
 import { MainScreen } from './components/MainScreen';
 import { parseRekordboxXml } from './services/xmlParser';
-import { enrichPlaylistData } from './services/geminiService';
+import { enrichPlaylistData, enrichPlaylistDataBatch } from "./services/geminiService";
 import type { Track, Suggestion, ViewMode, GroupingMode } from './types';
 
 const STORAGE_KEY = 'dj_copilot_playlist_v2';
@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEnriching, setIsEnriching] = useState<boolean>(false);
+  const [enrichProgress, setEnrichProgress] = useState<{ done: number; total: number } | null>(null);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [fontScale, setFontScale] = useState<number>(100);
   const [autoEnrichEnabled, setAutoEnrichEnabled] = useState<boolean>(true);
@@ -125,7 +126,7 @@ const App: React.FC = () => {
     setIsEnriching(true);
     setError(null);
     try {
-        const enrichedTracks = await enrichPlaylistData(tracksToEnrich);
+        const enrichedTracks = await enrichPlaylistDataBatch(tracksToEnrich, (done, total) => setEnrichProgress({ done, total }));
         if (!enrichedTracks) throw new Error("API returned no data");
         
         const enrichedMap = new Map(enrichedTracks.map(t => [t.id, t]));
@@ -151,6 +152,7 @@ const App: React.FC = () => {
         setError("Falha ao enriquecer a playlist com a IA.");
     } finally {
         setIsEnriching(false);
+        setEnrichProgress(null);
     }
   }, []);
 
@@ -217,6 +219,7 @@ const App: React.FC = () => {
             onEnrich={handleEnrichPlaylist}
             onUpdateLibrary={handleFileUpload}
             isEnriching={isEnriching}
+            enrichProgress={enrichProgress}
             fontScale={fontScale}
             onFontScaleChange={setFontScale}
             currentTrack={currentTrack}

@@ -519,3 +519,36 @@ export const enrichPlaylistData = async (playlist: Track[]): Promise<Partial<Tra
     return [];
   }
 };
+
+// ─── ENRICHMENT V2: batch processing com progresso ───────────────────────────
+
+export const enrichPlaylistDataBatch = async (
+  playlist: Track[],
+  onProgress?: (done: number, total: number) => void
+): Promise<Partial<Track>[]> => {
+  const BATCH_SIZE = 50;
+  const DELAY_MS = 1500;
+  const results: Partial<Track>[] = [];
+
+  const batches: Track[][] = [];
+  for (let i = 0; i < playlist.length; i += BATCH_SIZE) {
+    batches.push(playlist.slice(i, i + BATCH_SIZE));
+  }
+
+  for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+    const batch = batches[batchIndex];
+
+    const batchResults = await enrichPlaylistData(batch);
+    results.push(...batchResults);
+
+    const done = Math.min((batchIndex + 1) * BATCH_SIZE, playlist.length);
+    onProgress?.(done, playlist.length);
+
+    // delay entre batches para não estourar quota (exceto no último)
+    if (batchIndex < batches.length - 1) {
+      await new Promise(res => setTimeout(res, DELAY_MS));
+    }
+  }
+
+  return results;
+};
