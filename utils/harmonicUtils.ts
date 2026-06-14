@@ -54,8 +54,8 @@ export const detectClash = (trackA_Key: string, trackA_Bpm: string, trackB_Key: 
 
   // 2. Harmonic Clash
   if (trackA_Key && trackB_Key && trackA_Key !== 'N/A' && trackB_Key !== 'N/A') {
-    const keyA = trackA_Key.toUpperCase();
-    const keyB = trackB_Key.toUpperCase();
+    const keyA = normalizeToCamelot(trackA_Key);
+    const keyB = normalizeToCamelot(trackB_Key);
     
     if (keyA !== keyB) {
        const compatibility = CAMELOT_MAP[keyA];
@@ -71,4 +71,77 @@ export const detectClash = (trackA_Key: string, trackA_Bpm: string, trackB_Key: 
   }
 
   return result;
+};
+
+// ─── NORMALIZAÇÃO DE TONS → CAMELOT ──────────────────────────────────────────
+
+const NOTE_TO_CAMELOT: Record<string, string> = {
+  // Menores (A = minor)
+  'Abm': '1A', 'G#m': '1A',
+  'Ebm': '2A', 'D#m': '2A',
+  'Bbm': '3A', 'A#m': '3A',
+  'Fm':  '4A',
+  'Cm':  '5A',
+  'Gm':  '6A',
+  'Dm':  '7A',
+  'Am':  '8A',
+  'Em':  '9A',
+  'Bm':  '10A',
+  'F#m': '11A', 'Gbm': '11A',
+  'C#m': '12A', 'Dbm': '12A',
+  // Maiores (B = major)
+  'B':   '1B',
+  'F#':  '2B', 'Gb':  '2B',
+  'Db':  '3B', 'C#':  '3B',
+  'Ab':  '4B', 'G#':  '4B',
+  'Eb':  '5B', 'D#':  '5B',
+  'Bb':  '6B', 'A#':  '6B',
+  'F':   '7B',
+  'C':   '8B',
+  'G':   '9B',
+  'D':   '10B',
+  'A':   '11B',
+  'E':   '12B',
+};
+
+const OPEN_KEY_TO_CAMELOT: Record<string, string> = {
+  '1m': '1A',  '1d': '1B',
+  '2m': '2A',  '2d': '2B',
+  '3m': '3A',  '3d': '3B',
+  '4m': '4A',  '4d': '4B',
+  '5m': '5A',  '5d': '5B',
+  '6m': '6A',  '6d': '6B',
+  '7m': '7A',  '7d': '7B',
+  '8m': '8A',  '8d': '8B',
+  '9m': '9A',  '9d': '9B',
+  '10m': '10A', '10d': '10B',
+  '11m': '11A', '11d': '11B',
+  '12m': '12A', '12d': '12B',
+};
+
+export const normalizeToCamelot = (key: string): string => {
+  if (!key || key === 'N/A') return key;
+
+  const trimmed = key.trim();
+
+  // Já é Camelot (ex: 1A, 12B)
+  if (/^\d{1,2}[AB]$/i.test(trimmed)) {
+    return trimmed.toUpperCase();
+  }
+
+  // Open Key (ex: 1m, 6d)
+  const openKey = OPEN_KEY_TO_CAMELOT[trimmed.toLowerCase()];
+  if (openKey) return openKey;
+
+  // Notação musical (ex: Am, C#m, F, Bb)
+  const noteKey = NOTE_TO_CAMELOT[trimmed];
+  if (noteKey) return noteKey;
+
+  // Tentativa case-insensitive
+  const lower = trimmed.toLowerCase();
+  for (const [k, v] of Object.entries(NOTE_TO_CAMELOT)) {
+    if (k.toLowerCase() === lower) return v;
+  }
+
+  return trimmed; // retorna original se não reconhecer
 };
