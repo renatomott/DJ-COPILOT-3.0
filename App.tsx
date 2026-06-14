@@ -1,6 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { FileUploadScreen } from './components/FileUploadScreen';
+import { ConfirmModal } from './components/ConfirmModal';
 import { MainScreen } from './components/MainScreen';
 import { parseRekordboxXml } from './services/xmlParser';
 import { enrichPlaylistData, enrichPlaylistDataBatch } from "./services/geminiService";
@@ -27,6 +28,7 @@ const App: React.FC = () => {
   const [isEnriching, setIsEnriching] = useState<boolean>(false);
   const [enrichProgress, setEnrichProgress] = useState<{ done: number; total: number } | null>(null);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [showResetModal, setShowResetModal] = useState<boolean>(false);
   const [fontScale, setFontScale] = useState<number>(100);
   const [autoEnrichEnabled, setAutoEnrichEnabled] = useState<boolean>(true);
   const [isHighContrast, setIsHighContrast] = useState<boolean>(false);
@@ -190,15 +192,18 @@ const App: React.FC = () => {
   }, [autoEnrichEnabled, performEnrichment]);
 
   const handleReset = useCallback(() => {
-    if (window.confirm("Isso removerá a playlist atual. Deseja continuar?")) {
-      setPlaylist(null);
-      setCurrentTrack(null);
-      setSuggestions([]);
-      setSetQueue([]);
-      setEnabledDirectories([]);
-      localStorage.clear();
-      window.location.reload();
-    }
+    setShowResetModal(true);
+  }, []);
+
+  const handleResetConfirm = useCallback(() => {
+    setShowResetModal(false);
+    setPlaylist(null);
+    setCurrentTrack(null);
+    setSuggestions([]);
+    setSetQueue([]);
+    setEnabledDirectories([]);
+    localStorage.clear();
+    window.location.reload();
   }, []);
 
   if (!isInitialized) return null;
@@ -213,7 +218,16 @@ const App: React.FC = () => {
            />;
   }
 
-  return <MainScreen 
+  return <>
+    {showResetModal && (
+      <ConfirmModal
+        message={language === 'pt-BR' ? 'Isso removerá a playlist atual. Deseja continuar?' : 'This will remove the current playlist. Continue?'}
+        onConfirm={handleResetConfirm}
+        onCancel={() => setShowResetModal(false)}
+        language={language}
+      />
+    )}
+    <MainScreen 
             playlist={playlist} 
             onReset={handleReset}
             onEnrich={handleEnrichPlaylist}
@@ -240,7 +254,8 @@ const App: React.FC = () => {
             onViewModeChange={setViewMode}
             groupingMode={groupingMode}
             onGroupingModeChange={setGroupingMode}
-         />;
+         />
+  </>;
 };
 
 export default App;
